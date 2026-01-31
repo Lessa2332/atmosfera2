@@ -1,583 +1,431 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="AR-сцена з планетою для дітей">
-    <title>🌍«Світ на долоні » 🎈</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
-
-    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>🪄 Магічний Годинник ДЗ</title>
+    
+    <!-- MindAR + A-Frame -->
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image.prod.js"></script>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
-
+    
+    <!-- A-Frame Extensions -->
+    <script src="https://unpkg.com/aframe-event-set-component@5.0.0/dist/aframe-event-set-component.min.js"></script>
+    
     <style>
-        html, body {
+        /* Збережені стилі без змін */
+        * {
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: transparent;
-            font-family: 'Comic Neue', cursive, sans-serif;
-            font-weight: 700;
+            box-sizing: border-box;
         }
-
-        a-scene {
-            width: 100% !important;
-            height: 100% !important;
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .loading-screen {
             position: fixed;
             top: 0;
             left: 0;
-            background: transparent;
-        }
-
-        .arjs-loader {
-            height: 100%;
             width: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-            background: rgba(135, 206, 235, 0.2);
-            z-index: 9999;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            color: #FF4500;
-            font-size: 1.8em;
+            z-index: 1000;
+            transition: opacity 0.5s;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(0, 200, 255, 0.3);
+            border-top-color: #00c8ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .instruction {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            width: 100%;
             text-align: center;
-            padding: 20px;
-            box-sizing: border-box;
-            font-family: 'Comic Neue', cursive, sans-serif;
-            font-weight: 700;
+            padding: 0 20px;
+            z-index: 10;
         }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
+        
+        .instruction-text {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 200, 255, 0.3);
+            font-size: 16px;
+            line-height: 1.5;
+            max-width: 400px;
+            margin: 0 auto;
+            box-shadow: 0 0 20px rgba(0, 200, 255, 0.2);
         }
-
-        .pulse { animation: pulse 1.5s infinite; }
-
-        .controls {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10000;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
+        
+        .instruction-text strong {
+            color: #00c8ff;
+            font-weight: 600;
         }
-
-        .sound-btn, .youtube-btn, .play-btn, .next-btn, .exit-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 15px;
-            cursor: pointer;
-            font-family: 'Comic Neue', cursive, sans-serif;
-            font-size: 1em;
-            font-weight: 700;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            text-decoration: none;
-        }
-
-        .sound-btn { background-color: #4CAF50; color: white; }
-        .sound-btn.off { background-color: #f44336; }
-        .youtube-btn { background-color: #FF9800; color: white; }
-        .youtube-btn:hover { background-color: #FFB300; }
-        .play-btn { background-color: #0057B7; color: white; }
-        .play-btn:hover { background-color: #003087; }
-        .next-btn { background-color: #FFD700; color: #0057B7; display: none; }
-        .next-btn:hover { background-color: #FFC300; }
-        .exit-btn { background-color: #ff3333; color: white; display: none; }
-        .exit-btn:hover { background-color: #cc0000; }
-
-        #word-canvas {
-            position: absolute;
-            top: 10%;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10001;
+        
+        .result-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 10, 0.95);
             display: none;
-            border: 2px solid #0057B7;
-            background: rgba(255, 255, 255, 0.8);
-            max-width: 80%;
-            max-height: 50%;
-            border-radius: 10px;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        .result-title {
+            font-size: 24px;
+            margin-top: 20px;
+            color: #00c8ff;
+            text-align: center;
+ padding: 0 20px;
+        }
+        
+        .close-btn {
+            margin-top: 30px;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #00c8ff 0%, #0080ff 100%);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .close-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 0 20px rgba(0, 200, 255, 0.6);
         }
     </style>
 </head>
 <body>
-    <div class="arjs-loader" id="loader">
-        <div class="pulse">🌍 Світ на долоні 🎈</div>
-        <div style="margin-top: 20px; font-size: 1.2em;">Наведи камеру на маркер! 😊🎨</div>
+    <!-- Завантажувальний екран -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-spinner"></div>
+        <h2 style="margin-bottom: 10px; color: #00c8ff;">🪄 Магічний Годинник</h2>
+        <p style="color: #aaa; text-align: center; max-width: 300px;">
+            Завантаження AR-світу...<br>
+            Дозвольте доступ до камери
+        </p>
     </div>
 
-    <canvas id="word-canvas"></canvas>
+    <!-- Екран результату (тер лише текст) -->
+    <div class="result-screen" id="resultScreen">
+        <div class="result-title" id="resultTitle">Ваше завдання!</div>
+        <button class="close-btn" onclick="closeResult()">Спробувати ще раз</button>
+    </div>
 
-    <a-scene
-        mindar-image="imageTargetSrc: ./my-marker.mind;"
-        vr-mode-ui="enabled: false"
-        device-orientation-permission-ui="enabled: false"
-        loading-screen="enabled: false"
-        embedded
-        renderer="colorManagement: true; physicallyCorrectLights: true;"
-        touch-gestures
-    >
-        <a-assets>
-            <audio id="bg-music" src="./bg-music.mp3" preload="auto" loop></audio>
-            <audio id="success-sound" src="./success.mp3" preload="auto"></audio>
-            <img id="earth-texture" src="./earth.jpg">
-            <img id="peace-dove-img" src="./peace-dove.png">
-        </a-assets>
+    <!-- A-Frame сцена -->
+    <a-scene mindar-image="imageTargetSrc: targets.mind;" 
+             loading-screen="enabled: false;"
+             vr-mode-ui="enabled: false"
+             device-orientation-permission-ui="enabled: false">
 
-        <a-camera
-            id="camera"
-            position="0 0 1.5"
-            look-controls="enabled: false"
-        ></a-camera>
+        <!-- Камера -->
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-        <a-entity mindar-image-target="targetIndex: 0">
-            <a-sphere
-                id="hand-planet"
-                position="0 0 -0.5"
-                radius="0.4"
-                src="#earth-texture"
+        <!-- Основний контейнер для AR-об'єктів -->
+        <a-entity id="magic-watch" mindar-image-target="targetIndex: 0" visible="false">
+            
+            <!-- Основа годинника (темно-сірий циліндр) -->
+            <a-cylinder id="watch-base"
+                radius="0.1"
+                height="0.02"
+                position="0 0 0"
+                material="color: #222233; metalness: 0.8; roughness: 0.2"
+                side="double">
+            </a-cylinder>
+
+            <!-- Екран годинника (чорний з легким відблиском) -->
+            <a-cylinder id="watch-screen"
+                radius="0.09"
+                height="0.021"
+                position="0 0 0.011"
+                material="color: #000011; metalness: 0.9; roughness: 0.1"
+                side="double">
+            </a-cylinder>
+
+            <!-- Динамічний текст на циферблаті -->
+            <a-text id="dial-text" 
+                value="" 
+                align="center" 
+                color="#00c8ff" 
+                width="0.15" 
+                position="0 0 0.012" 
                 visible="false"
-                material="opacity: 1; transparent: false"
-            >
-                <a-image
-                    id="peace-dove-entity"
-                    src="#peace-dove-img"
-                    position="0 0.5 0.5"
-                    scale="0.3 0.3 0.3"
-                    visible="false"
-                    animation="property: rotation; to: 0 360 0; dur: 4000; easing: linear; loop: true"
-                ></a-image>
-                <a-animation
-                    attribute="rotation"
-                    to="0 360 0"
-                    dur="5000"
-                    repeat="indefinite"
-                ></a-animation>
+                wrap-count="10">
+            </a-text>
+
+            <!-- Кнопка PLAY (неоново-блакитна) -->
+            <a-cylinder id="play-button"
+                class="clickable"
+                radius="0.025"
+                height="0.008"
+                position="0.08 0 0.01"
+                material="color: #003344; metalness: 0.7; roughness: 0.3"
+                animation__hover="property: material.color; to: #00c8ff; startEvents: mouseenter; dur: 200"
+                animation__leave="property: material.color; to: #003344; startEvents: mouseleave; dur: 200"
+                animation__click="property: scale; to: 0.9 0.9 0.9; startEvents: click; dur: 100; dir: alternate">
+                
+                <!-- Іконка трикутника на кнопці -->
+                <a-triangle id="play-icon"
+                    position="0 0 0.006"
+                    rotation="90 0 0"
+                    scale="0.03 0.03 0.03"
+                    material="color: #ffffff; emissive: #00c8ff; emissiveIntensity: 0.5">
+                </a-triangle>
+
+                <!-- Світлова оболонка (видима при наведенні) -->
+                <a-ring id="button-glow"
+                    radius-outer="0.035"
+                    radius-inner="0.03"
+                    position="0 0 0.005"
+                    rotation="90 0 0"
+                    material="color: #00c8ff; opacity: 0; transparent: true"
+                    animation__glow="property: material.opacity; to: 0.7; startEvents: mouseenter; dur: 200"
+                    animation__unglow="property: material.opacity; to: 0; startEvents: mouseleave; dur: 200">
+                </a-ring>
+            </a-cylinder>
+
+            <!-- Додаткові неонові елементи дизайну -->
+            <a-ring id="accent-ring-1"
+                radius-outer="0.095"
+                radius-inner="0.092"
+                position="0 0 0.01"
+                rotation="90 0 0"
+                material="color: #00aaff; emissive: #0088ff; emissiveIntensity: 0.3; side: double">
+            </a-ring>
+
+            <a-ring id="accent-ring-2"
+                radius-outer="0.105"
+                radius-inner="0.102"
+                position="0 0 0.009"
+                rotation="90 0 0"
+                material="color: #ff00aa; emissive: #cc0088; emissiveIntensity: 0.2; side: double">
+            </a-ring>
+
+            <!-- Точкові світлодіоди -->
+            <a-sphere class="led-dot"
+                radius="0.004"
+                position="-0.04 0.04 0.012"
+                material="color: #00ff88; emissive: #00ff88; emissiveIntensity: 0.8">
             </a-sphere>
+            
+            <a-sphere class="led-dot"
+                radius="0.004"
+                position="0.04 -0.04 0.012"
+                material="color: #ff0088; emissive: #ff0088; emissiveIntensity: 0.8">
+            </a-sphere>
+
         </a-entity>
+
+        <!-- Статичне світло для підсвічування -->
+        <a-light type="point" color="#00aaff" intensity="0.5" position="0.5 0.5 0.5"></a-light>
+        <a-light type="ambient" color="#ffffff" intensity="0.3"></a-light>
+
     </a-scene>
 
-    <div class="controls">
-        <button id="sound-btn" class="sound-btn">Увімкнути звук</button>
-        <button id="play-btn" class="play-btn">Грати</button>
-        <button id="next-btn" class="next-btn">Наступне</button>
-        <button id="exit-btn" class="exit-btn">Вийти з гри</button>
-        <a href="https://www.youtube.com/playlist?list=PL6UDFwT9TzFw5K8Tzu_OgsDz7vV3N9eY-" target="_blank" class="youtube-btn">YouTube SmartLessa</a>
+    <!-- Інструкція для користувача -->
+    <div class="instruction" id="instruction">
+        <div class="instruction-text">
+            <strong>Інструкція:</strong><br>
+            1. Наведіть камеру на браслет<br>
+            2. Натисніть на <span style="color:#00c8ff">▶ кнопку</span> на годиннику<br>
+            3. Дочекайтеся магічного результату!
+        </div>
     </div>
 
     <script>
-        function fixHeight() {
-            document.body.style.height = window.innerHeight + 'px';
-        }
-        fixHeight();
-        window.addEventListener('resize', fixHeight);
+        // Отримуємо DOM-елементи
+        const loadingScreen = document.getElementById('loadingScreen');
+        const resultScreen = document.getElementById('resultScreen');
+        const resultTitle = document.getElementById('resultTitle');
+        const instruction = document.getElementById('instruction');
+        const watchEntity = document.getElementById('magic-watch');
+        const playButton = document.getElementById('play-button');
+        const dialText = document.getElementById('dial-text'); // Додано
 
-        function adjustCanvasSize() {
-            const canvas = document.getElementById('word-canvas');
-            canvas.width = window.innerWidth * 0.8;
-            canvas.height = window.innerHeight * 0.5;
-        }
-        window.addEventListener('resize', adjustCanvasSize);
-        adjustCanvasSize();
-
-        const loader = document.querySelector('#loader');
-        const targetEntity = document.querySelector('[mindar-image-target]');
-        const planet = document.querySelector('#hand-planet');
-        const bgMusic = document.querySelector('#bg-music');
-        const soundBtn = document.querySelector('#sound-btn');
-        const playBtn = document.querySelector('#play-btn');
-        const nextBtn = document.querySelector('#next-btn');
-        const exitBtn = document.querySelector('#exit-btn');
-        const peaceDove = document.querySelector('#peace-dove-entity');
-        const successSound = document.querySelector('#success-sound');
-        const canvas = document.querySelector('#word-canvas');
-        const ctx = canvas.getContext('2d');
-        const arScene = document.querySelector('a-scene');
-
-        const earthTexture = document.querySelector('#earth-texture');
-        if (earthTexture) {
-            earthTexture.addEventListener('load', () => { console.log('✅ Текстура earth.jpg успішно завантажена'); });
-            earthTexture.addEventListener('error', () => { console.error('❌ Помилка завантаження текстури earth.jpg'); });
-        }
-        const peaceDoveImg = document.querySelector('#peace-dove-img');
-        if (peaceDoveImg) {
-            peaceDoveImg.addEventListener('load', () => { console.log('✅ Текстура голуба успішно завантажена'); });
-            peaceDoveImg.addEventListener('error', () => { console.error('❌ Помилка завантаження текстури peace-dove.png'); });
-        }
-
-        function getTextWidth(text, font) {
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            context.font = font;
-            return context.measureText(text).width + 10;
-        }
-
-        const phrases = [
-            ['Мир', 'Україні', 'Річка', 'Гора'],
-            ['Свобода', 'всім', 'Ліс', 'Море'],
-            ['Єдність', 'і', 'мир', 'Дерево', 'Сонце'],
-            ['Україна', 'моя', 'Батьківщина', 'квітка'], // Виправлені слова для 4-ї фрази
-            ['Добро', 'переможе', 'Зло', 'Сміх']
+        // Масив завдань (без зображень)
+        const tasks = [
+            '🎲 Прочитай 15 речень і вибери найважливіше',
+            '🕵️ Знайди в тексті таємний зв\'язок',
+            '🎨 Намалюй схему головної ідеї',
+            '🏃 Виконай завдання за 5 хвилин',
+            '🤔 Задай класу одне глибоке питання',
+            '✍️ Випиши найкрасивіше речення',
+            '🧩 Склади питання з відповіддю в тексті',
+            '🎭 Прочитай уривок з виразом',
+            '🔍 Знайди 3 нових слова'
         ];
 
-        const correctPhraseOrders = [
-            ['Мир', 'Україні'],
-            ['Свобода', 'всім'],
-            ['Єдність', 'і', 'мир'],
-            ['Україна', 'моя', 'Батьківщина'],
-            ['Добро', 'переможе']
-        ];
+        // Приховати інструкцію спочатку
+        instruction.style.display = 'none';
 
-        let currentPhraseIndex = 0;
-        let words = [];
-        let selectedWord = null;
-        let isGameActive = false;
-        let currentCompletedPhrase = [];
-
-        targetEntity.addEventListener('targetFound', () => {
-            console.log("🎯 Маркер знайдено! Планета з'явилася.");
-            loader.style.display = 'none';
-            planet.setAttribute('visible', 'true');
-            if (bgMusic.paused) {
-                bgMusic.play().catch(e => console.log("🔇 Помилка відтворення музики:", e));
-                soundBtn.classList.remove('off');
-                soundBtn.textContent = 'Вимкнути звук';
-            }
-            if (!isGameActive) {
-                playBtn.style.display = 'block';
-            }
-        });
-
-        targetEntity.addEventListener('targetLost', () => {
-            console.log("ℹ️ Маркер втрачено.");
-            planet.setAttribute('visible', 'false');
-            bgMusic.pause();
-            canvas.style.display = 'none';
-            playBtn.style.display = 'none';
-            nextBtn.style.display = 'none';
-            exitBtn.style.display = 'none';
-            loader.style.display = 'flex';
-            loader.querySelector('.pulse').textContent = '🌍 Світ на долоні 🎈';
-            loader.querySelector('div[style]').textContent = 'Наведи камеру на маркер! 😊🎨';
-        });
-
-        soundBtn.addEventListener('click', () => {
-            if (bgMusic.paused) {
-                bgMusic.play().catch(e => console.log("🔇 Помилка відтворення музики:", e));
-                soundBtn.classList.remove('off');
-                soundBtn.textContent = 'Вимкнути звук';
-            } else {
-                bgMusic.pause();
-                soundBtn.classList.add('off');
-                soundBtn.textContent = 'Увімкнути звук';
-            }
-        });
-
-        function shuffle(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
-
-        function loadPhrase(index) {
-            const phraseWords = phrases[index];
-            const shuffledWords = shuffle([...phraseWords]);
-            words = shuffledWords.map((text) => {
-                return {
-                    text,
-                    x: 0,
-                    y: 0,
-                    width: getTextWidth(text, 'bold 20px Comic Neue'),
-                    height: 30,
-                    placed: false
-                };
-            });
-            currentCompletedPhrase = [];
-            positionWordsRandomly();
-            drawWords();
-        }
-
-        function positionWordsRandomly() {
-            const padding = 20;
-            const horizontalMargin = 20; // Зменшено відступ для кращого використання простору
-            const verticalMargin = 15; // Відстань між рядками
-            let currentX = horizontalMargin;
-            let currentY = 50;
-            const availableWidth = canvas.width - horizontalMargin * 2;
-            
-            // Розподіляємо слова по рядках
-            const lines = [];
-            let line = [];
-            let lineWidth = 0;
-            
-            words.forEach(word => {
-                const wordWidth = word.width;
-                if (lineWidth + wordWidth + padding > availableWidth && line.length > 0) {
-                    lines.push(line);
-                    line = [word];
-                    lineWidth = wordWidth + padding;
-                } else {
-                    line.push(word);
-                    lineWidth += wordWidth + padding;
-                }
-            });
-            if (line.length > 0) {
-                lines.push(line);
-            }
-            
-            // Розраховуємо та встановлюємо координати
-            lines.forEach(line => {
-                const totalLineWidth = line.reduce((sum, word) => sum + word.width + padding, 0) - padding;
-                let startX = (canvas.width - totalLineWidth) / 2;
-                
-                line.forEach(word => {
-                    word.x = startX;
-                    word.y = currentY;
-                    startX += word.width + padding;
-                });
-                currentY += line[0].height + verticalMargin;
-            });
-        }
-
-        function drawWords() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.font = 'bold 20px Comic Neue';
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'top';
-
-            ctx.fillStyle = '#FF4500';
-            ctx.font = 'bold 22px Comic Neue';
-            ctx.textAlign = 'center';
-            ctx.fillText('🎯 Склади фразу!', canvas.width / 2, 30);
-
-            const containerWidth = canvas.width - 60;
-            const containerHeight = 50;
-            const containerX = (canvas.width - containerWidth) / 2;
-            const containerY = canvas.height - 80;
-            ctx.strokeStyle = '#FFD700';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(containerX, containerY, containerWidth, containerHeight);
-
-            let placedX = containerX + 10;
-            currentCompletedPhrase.forEach(wordText => {
-                const wordWidth = getTextWidth(wordText, 'bold 20px Comic Neue');
-                ctx.fillStyle = '#0057B7';
-                ctx.fillText(wordText, placedX, containerY + 10);
-                placedX += wordWidth + 10;
-            });
-
-            words.forEach(word => {
-                if (!word.placed) {
-                    ctx.fillStyle = '#FF4500';
-                    ctx.shadowColor = 'rgba(0,0,0,0.2)';
-                    ctx.shadowBlur = 3;
-                    ctx.shadowOffsetX = 1;
-                    ctx.shadowOffsetY = 1;
-                    ctx.fillText(word.text, word.x, word.y);
-                    ctx.shadowColor = 'transparent';
-                }
-            });
-        }
-
-        function startWordGame() {
-            isGameActive = true;
-            canvas.style.display = 'block';
-            playBtn.style.display = 'none';
-            nextBtn.style.display = 'none';
-            exitBtn.style.display = 'block';
-            peaceDove.setAttribute('visible', 'false');
-            currentPhraseIndex = 0;
-            loadPhrase(currentPhraseIndex);
-
-            canvas.addEventListener('mousedown', handleMouseDown);
-            canvas.addEventListener('mousemove', handleMouseMove);
-            canvas.addEventListener('mouseup', handleMouseUp);
-            canvas.addEventListener('touchstart', handleTouchStart);
-            canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
-            canvas.addEventListener('touchend', handleMouseUp);
-        }
-
-        function exitGame() {
-            isGameActive = false;
-            canvas.style.display = 'none';
-            playBtn.style.display = 'block';
-            nextBtn.style.display = 'none';
-            exitBtn.style.display = 'none';
-            peaceDove.setAttribute('visible', 'true');
-        }
-
-        function getCanvasCoords(e, isTouch = false) {
-            const rect = canvas.getBoundingClientRect();
-            const x = isTouch ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-            const y = isTouch ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
-            return { x, y };
-        }
-
-        function handleMouseDown(e) {
-            e.preventDefault();
-            const { x, y } = getCanvasCoords(e);
-            selectedWord = words.find(word =>
-                !word.placed && x > word.x && x < word.x + word.width && y > word.y && y < word.y + word.height
-            );
-        }
-
-        function handleTouchStart(e) {
-            e.preventDefault();
-            const { x, y } = getCanvasCoords(e, true);
-            selectedWord = words.find(word =>
-                !word.placed && x > word.x && x < word.x + word.width && y > word.y && y < word.y + word.height
-            );
-        }
-
-        function handleMouseMove(e) {
-            if (selectedWord) {
-                const { x, y } = getCanvasCoords(e, e.touches);
-                selectedWord.x = x - selectedWord.width / 2;
-                selectedWord.y = y - selectedWord.height / 2;
-                drawWords();
-            }
-        }
-
-        function handleTouchMove(e) {
-            e.preventDefault();
-            if (selectedWord) {
-                const { x, y } = getCanvasCoords(e, true);
-                selectedWord.x = x - selectedWord.width / 2;
-                selectedWord.y = y - selectedWord.height / 2;
-                drawWords();
-            }
-        }
-
-        function handleMouseUp() {
-            if (selectedWord) {
-                const containerY = canvas.height - 80;
-                const containerHeight = 50;
-
-                if (selectedWord.y > containerY && selectedWord.y < containerY + containerHeight) {
-                    const nextWord = correctPhraseOrders[currentPhraseIndex][currentCompletedPhrase.length];
-                    if (selectedWord.text === nextWord) {
-                        currentCompletedPhrase.push(selectedWord.text);
-                        words = words.filter(w => w !== selectedWord);
-                        selectedWord = null;
-                        checkWinCondition();
-                    } else {
-                        selectedWord = null;
-                        positionWordsRandomly();
-                    }
-                } else {
-                    selectedWord = null;
-                    positionWordsRandomly();
-                }
-                drawWords();
-            }
-        }
-
-        function checkWinCondition() {
-            const targetPhrase = correctPhraseOrders[currentPhraseIndex];
-            if (currentCompletedPhrase.join(' ') === targetPhrase.join(' ')) {
-                isGameActive = false;
-                if (successSound) successSound.play();
-                peaceDove.setAttribute('visible', 'true');
-
+        // Подія при завантаженні сцени
+        document.querySelector('a-scene').addEventListener('loaded', function() {
+            setTimeout(() => {
+                loadingScreen.style.opacity = '0';
                 setTimeout(() => {
-                    canvas.style.display = 'none';
-                    if (currentPhraseIndex < phrases.length - 1) {
-                        nextBtn.style.display = 'block';
-                        exitBtn.style.display = 'block';
-                    } else {
-                        console.log('🎉 Гра завершена! Вітаємо!');
-                        nextBtn.style.display = 'none';
-                        exitBtn.style.display = 'none';
-                        playBtn.style.display = 'block';
-                    }
-                }, 3000);
+                    loadingScreen.style.display = 'none';
+                    instruction.style.display = 'block';
+                }, 500);
+            }, 1500);
+        });
+
+        // Подія при знаходженні маркера
+        document.querySelector('a-scene').addEventListener('targetFound', event => {
+            console.log('🎯 Маркер знайдено!');
+            watchEntity.setAttribute('visible', 'true');
+            
+            // Анімація появи
+            watchEntity.setAttribute('animation', {
+                property: 'scale',
+                from: '0.5 0.5 0.5',
+                to: '1 1 1',
+                dur: 800,
+                easing: 'easeOutElastic'
+            });
+        });
+
+        // Подія при втраті маркера
+        document.querySelector('a-scene').addEventListener('targetLost', event => {
+            console.log('❌ Маркер втрачено');
+            watchEntity.setAttribute('visible', 'false');
+            dialText.setAttribute('visible', 'false'); // Сховати текст
+        });
+
+        // Обробник кліку на кнопку PLAY
+        playButton.addEventListener('click', function(event) {
+            // Запобігаємо подвійному кліку
+            if (playButton.getAttribute('data-processing') === 'true') return;
+            playButton.setAttribute('data-processing', 'true');
+            
+            // Вібрація телефона (якщо підтримується)
+            if (navigator.vibrate) {
+                navigator.vibrate([100, 50, 100]);
             }
+            
+            // Інтенсивне підсвічування кнопки
+            playButton.setAttribute('material', 'color', '#00ffff; emissive: #00ffff; emissiveIntensity: 1');
+            document.getElementById('button-glow').setAttribute('material', 'opacity', '1');
+            
+            // Анімація натискання
+            playButton.setAttribute('animation__press', {
+                property: 'scale',
+                to: '0.85 0.85 0.85',
+                dur: 200,
+                easing: 'easeInOutQuad'
+            });
+            
+            // Анімація "пульсації" годинника
+            watchEntity.setAttribute('animation__pulse', {
+                property: 'scale',
+                from: '1 1 1',
+                to: '1.05 1.05 1.05',
+                dur: 300,
+                easing: 'easeInOutSine',
+                dir: 'alternate',
+                loop: 3
+            });
+            
+            // Чекаємо 3 секунди
+            setTimeout(() => {
+                // Випадковий вибір завдання
+                const randomIndex = Math.floor(Math.random() * tasks.length);
+                const selectedTask = tasks[randomIndex];
+                
+                // Показуємо результат на циферблаті
+                showResultOnDial(selectedTask);
+                
+                // Скидаємо стан кнопки
+                setTimeout(() => {
+                    playButton.setAttribute('material', 'color', '#003344');
+                    playButton.setAttribute('data-processing', 'false');
+                    document.getElementById('button-glow').setAttribute('material', 'opacity', '0');
+                }, 1000);
+                
+            }, 3000);
+        });
+
+        // Функція показу результату на циферблаті
+        function showResultOnDial(title) {
+            // Оновлюємо текст на циферблаті
+            dialText.setAttribute('value', title);
+            dialText.setAttribute('visible', 'true');
+            
+            // Приховуємо інструкцію
+            instruction.style.display = 'none';
+            
+            // Показуємо результат на екрані (для зручності)
+            resultTitle.textContent = title;
+            resultScreen.style.display = 'flex';
+            resultScreen.style.opacity = '0';
+            setTimeout(() => {
+                resultScreen.style.opacity = '1';
+                resultScreen.style.transition = 'opacity 0.5s';
+            }, 10);
         }
 
-        playBtn.addEventListener('click', () => {
-            currentPhraseIndex = 0;
-            startWordGame();
-        });
+        // Функція закриття результату
+        function closeResult() {
+            resultScreen.style.opacity = '0';
+            setTimeout(() => {
+                resultScreen.style.display = 'none';
+                instruction.style.display = 'block';
+                dialText.setAttribute('visible', 'false');
+            }, 500);
+        }
 
-        nextBtn.addEventListener('click', () => {
-            currentPhraseIndex++;
-            loadPhrase(currentPhraseIndex);
-            nextBtn.style.display = 'none';
-            isGameActive = true;
-            canvas.style.display = 'block';
-            peaceDove.setAttribute('visible', 'false');
-        });
-
-        exitBtn.addEventListener('click', exitGame);
-
-        AFRAME.registerComponent('touch-gestures', {
-            schema: {
-                minScale: { type: 'number', default: 0.2 },
-                maxScale: { type: 'number', default: 3.0 },
-                rotationSpeed: { type: 'number', default: 2.0 }
-            },
-            init: function () {
-                this.isRotating = false;
-                this.isPinching = false;
-                this.startPos = { x: 0, y: 0 };
-                this.currentScale = 1;
-                this.planet = document.querySelector('#hand-planet');
-                this.el.addEventListener('touchstart', (e) => {
-                    if (isGameActive) return;
-                    e.preventDefault();
-                    if (e.touches.length === 1) {
-                        this.isRotating = true;
-                        this.startPos.x = e.touches[0].pageX;
-                    } else if (e.touches.length === 2) {
-                        this.isPinching = true;
-                        this.isRotating = false;
-                        this.initialDistance = Math.hypot(
-                            e.touches[0].pageX - e.touches[1].pageX,
-                            e.touches[0].pageY - e.touches[1].pageY
-                        );
-                        this.currentScale = this.planet.object3D.scale.x;
-                    }
-                });
-
-                this.el.addEventListener('touchmove', (e) => {
-                    if (isGameActive) return;
-                    e.preventDefault();
-                    if (this.isPinching && e.touches.length === 2) {
-                        const currentDistance = Math.hypot(
-                            e.touches[0].pageX - e.touches[1].pageX,
-                            e.touches[0].pageY - e.touches[1].pageY
-                        );
-                        const scaleFactor = currentDistance / this.initialDistance;
-                        const newScale = Math.max(this.data.minScale, Math.min(this.data.maxScale, this.currentScale * scaleFactor));
-                        this.planet.object3D.scale.set(newScale, newScale, newScale);
-                    } else if (this.isRotating && e.touches.length === 1) {
-                        const deltaX = (e.touches[0].pageX - this.startPos.x) * this.data.rotationSpeed;
-                        this.planet.object3D.rotation.y += THREE.MathUtils.degToRad(deltaX);
-                        this.startPos.x = e.touches[0].pageX;
-                    }
-                });
-
-                this.el.addEventListener('touchend', () => {
-                    this.isRotating = false;
-                    this.isPinching = false;
-                });
-            }
+        // Обробка помилок
+        window.addEventListener('error', function(e) {
+            console.error('Помилка:', e.error);
+            loadingScreen.innerHTML = `
+                <h2 style="color:#ff5555">😕 Упс, щось пішло не так</h2>
+                <p style="color:#aaa; margin:20px; text-align:center">
+                    Перезавантажте сторінку<br>
+                    або перевірте підключення до інтернету
+                </p>
+                <button onclick="location.reload()" style="
+                    padding: 10px 30px;
+                    background: #00c8ff;
+                    border: none;
+                    border-radius: 20px;
+                    color: white;
+                    font-size: 16px;
+                    cursor: pointer;
+                    margin-top: 20px;
+                ">Перезавантажити</button>
+            `;
         });
     </script>
 </body>
