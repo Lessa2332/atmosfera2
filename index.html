@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>🪄 Магічний Годинник ДЗ</title>
+    <title>🕶️ Годинник Супер-Агента</title>
     
     <!-- MindAR + A-Frame -->
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image.prod.js"></script>
@@ -15,7 +15,6 @@
     <script src="https://unpkg.com/aframe-event-set-component@5.0.0/dist/aframe-event-set-component.min.js"></script>
     
     <style>
-        /* Збережені стилі без змін */
         * {
             margin: 0;
             padding: 0;
@@ -23,8 +22,8 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0a0a0a;
+            font-family: 'Comic Sans MS', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0a2e 100%);
             color: #fff;
             overflow: hidden;
             height: 100vh;
@@ -36,7 +35,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0a2e 100%);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -46,10 +45,10 @@
         }
         
         .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(0, 200, 255, 0.3);
-            border-top-color: #00c8ff;
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(0, 255, 200, 0.3);
+            border-top-color: #00ffc8;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin-bottom: 20px;
@@ -67,24 +66,32 @@
             text-align: center;
             padding: 0 20px;
             z-index: 10;
+            transition: opacity 0.5s;
         }
         
         .instruction-text {
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 20, 40, 0.85);
             backdrop-filter: blur(10px);
-            padding: 15px 25px;
-            border-radius: 20px;
-            border: 1px solid rgba(0, 200, 255, 0.3);
+            padding: 15px 20px;
+            border-radius: 15px;
+            border: 2px solid #00ffc8;
             font-size: 16px;
             line-height: 1.5;
             max-width: 400px;
             margin: 0 auto;
-            box-shadow: 0 0 20px rgba(0, 200, 255, 0.2);
+            box-shadow: 0 0 30px rgba(0, 255, 200, 0.3);
+            animation: pulse-border 2s infinite;
+        }
+        
+        @keyframes pulse-border {
+            0%, 100% { border-color: #00ffc8; box-shadow: 0 0 30px rgba(0, 255, 200, 0.3); }
+            50% { border-color: #ff00ff; box-shadow: 0 0 30px rgba(255, 0, 255, 0.3); }
         }
         
         .instruction-text strong {
-            color: #00c8ff;
+            color: #00ffc8;
             font-weight: 600;
+            text-shadow: 0 0 10px #00ffc8;
         }
         
         .result-screen {
@@ -93,7 +100,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(10, 10, 10, 0.95);
+            background: rgba(10, 10, 26, 0.95);
+            backdrop-filter: blur(10px);
             display: none;
             flex-direction: column;
             justify-content: center;
@@ -101,30 +109,71 @@
             z-index: 2000;
         }
         
+        .result-content {
+            background: linear-gradient(135deg, rgba(0, 30, 60, 0.9) 0%, rgba(30, 0, 60, 0.9) 100%);
+            padding: 30px;
+            border-radius: 20px;
+            border: 3px solid #00ffc8;
+            max-width: 350px;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(0, 255, 200, 0.4);
+            transform: scale(0.9);
+            animation: pop-in 0.5s forwards;
+        }
+        
+        @keyframes pop-in {
+            to { transform: scale(1); }
+        }
+        
         .result-title {
             font-size: 24px;
-            margin-top: 20px;
-            color: #00c8ff;
-            text-align: center;
- padding: 0 20px;
+            margin-bottom: 20px;
+            color: #00ffc8;
+            text-shadow: 0 0 15px #00ffc8;
+            font-weight: bold;
+        }
+        
+        .result-description {
+            font-size: 16px;
+            color: #aaddff;
+            margin-bottom: 25px;
+            line-height: 1.4;
         }
         
         .close-btn {
-            margin-top: 30px;
-            padding: 12px 30px;
-            background: linear-gradient(135deg, #00c8ff 0%, #0080ff 100%);
+            padding: 12px 35px;
+            background: linear-gradient(135deg, #00ffc8 0%, #0088ff 100%);
             border: none;
             border-radius: 25px;
-            color: white;
+            color: #001122;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: bold;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px rgba(0, 255, 200, 0.5);
+        }
+        
+        .close-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 255, 200, 0.8);
         }
         
         .close-btn:active {
             transform: scale(0.95);
-            box-shadow: 0 0 20px rgba(0, 200, 255, 0.6);
+        }
+        
+        .agent-badge {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 40, 80, 0.8);
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 2px solid #00ffc8;
+            font-size: 14px;
+            color: #00ffc8;
+            z-index: 50;
+            display: none;
         }
     </style>
 </head>
@@ -132,136 +181,171 @@
     <!-- Завантажувальний екран -->
     <div class="loading-screen" id="loadingScreen">
         <div class="loading-spinner"></div>
-        <h2 style="margin-bottom: 10px; color: #00c8ff;">🪄 Магічний Годинник</h2>
-        <p style="color: #aaa; text-align: center; max-width: 300px;">
-            Завантаження AR-світу...<br>
-            Дозвольте доступ до камери
+        <h2 style="margin-bottom: 10px; color: #00ffc8; text-shadow: 0 0 10px #00ffc8;">🕶️ ГОДИННИК СУПЕР-АГЕНТА</h2>
+        <p style="color: #aaddff; text-align: center; max-width: 300px;">
+            Активація AR-модуля...<br>
+            Налаштування камери...
         </p>
     </div>
 
-    <!-- Екран результату (тер лише текст) -->
+    <!-- Бейдж агента -->
+    <div class="agent-badge" id="agentBadge">⚡ Рівень доступу: MAXIMUM</div>
+
+    <!-- Екран результату -->
     <div class="result-screen" id="resultScreen">
-        <div class="result-title" id="resultTitle">Ваше завдання!</div>
-        <button class="close-btn" onclick="closeResult()">Спробувати ще раз</button>
+        <div class="result-content">
+            <div class="result-title" id="resultTitle">СУПЕР-СПРОМОЖНІСТЬ!</div>
+            <div class="result-description" id="resultDescription"></div>
+            <button class="close-btn" onclick="closeResult()">ПРОДОВЖИТИ МІСІЮ</button>
+        </div>
     </div>
 
     <!-- A-Frame сцена -->
     <a-scene mindar-image="imageTargetSrc: targets.mind;" 
              loading-screen="enabled: false;"
              vr-mode-ui="enabled: false"
-             device-orientation-permission-ui="enabled: false">
+             device-orientation-permission-ui="enabled: false"
+             renderer="colorManagement: true;">
 
         <!-- Камера -->
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-        <!-- Основний контейнер для AR-об'єктів -->
+        <!-- Основний контейнер для AR-годинника -->
         <a-entity id="magic-watch" mindar-image-target="targetIndex: 0" visible="false">
             
-            <!-- Основа годинника (темно-сірий циліндр) -->
-            <a-cylinder id="watch-base"
-                radius="0.1"
-                height="0.02"
+            <!-- Основа годинника (квадрат 3x3 см) -->
+            <a-box id="watch-base"
+                width="0.03"
+                height="0.03"
+                depth="0.005"
                 position="0 0 0"
-                material="color: #222233; metalness: 0.8; roughness: 0.2"
+                material="color: #001122; metalness: 0.9; roughness: 0.1"
                 side="double">
-            </a-cylinder>
+            </a-box>
 
-            <!-- Екран годинника (чорний з легким відблиском) -->
-            <a-cylinder id="watch-screen"
-                radius="0.09"
-                height="0.021"
-                position="0 0 0.011"
-                material="color: #000011; metalness: 0.9; roughness: 0.1"
+            <!-- Екран годинника (чорний з неоновим відблиском) -->
+            <a-plane id="watch-screen"
+                width="0.028"
+                height="0.028"
+                position="0 0 0.003"
+                material="color: #000022; metalness: 0.8; roughness: 0.2; emissive: #000044; emissiveIntensity: 0.2"
                 side="double">
-            </a-cylinder>
+            </a-plane>
 
-            <!-- Динамічний текст на циферблаті -->
+            <!-- Рамка екрану -->
+            <a-plane id="screen-frame"
+                width="0.03"
+                height="0.03"
+                position="0 0 0.002"
+                material="color: #00ffc8; emissive: #00ffc8; emissiveIntensity: 0.3; transparent: true; opacity: 0.5"
+                side="back">
+            </a-plane>
+
+            <!-- Динамічний текст на екрані -->
             <a-text id="dial-text" 
-                value="" 
+                value="READY" 
                 align="center" 
-                color="#00c8ff" 
-                width="0.15" 
-                position="0 0 0.012" 
-                visible="false"
-                wrap-count="10">
+                color="#00ffc8" 
+                width="0.025" 
+                position="0 0 0.004" 
+                wrap-count="8"
+                font="https://cdn.aframe.io/fonts/Monoid.fnt">
+                <a-animation attribute="material.opacity"
+                    from="0.7" to="1" dur="1000" repeat="indefinite" direction="alternate"></a-animation>
             </a-text>
 
-            <!-- Кнопка PLAY (неоново-блакитна) -->
-            <a-cylinder id="play-button"
+            <!-- Кнопка START (пульсуюча) -->
+            <a-box id="start-button"
                 class="clickable"
-                radius="0.025"
-                height="0.008"
-                position="0.08 0 0.01"
-                material="color: #003344; metalness: 0.7; roughness: 0.3"
-                animation__hover="property: material.color; to: #00c8ff; startEvents: mouseenter; dur: 200"
-                animation__leave="property: material.color; to: #003344; startEvents: mouseleave; dur: 200"
-                animation__click="property: scale; to: 0.9 0.9 0.9; startEvents: click; dur: 100; dir: alternate">
+                width="0.01"
+                height="0.01"
+                depth="0.003"
+                position="0.015 0.012 0.002"
+                material="color: #ff3366; emissive: #ff3366; emissiveIntensity: 0.5"
+                animation__pulse="property: material.emissiveIntensity; from: 0.5; to: 1.5; dur: 800; loop: true; dir: alternate; easing: easeInOutSine"
+                animation__hover="property: scale; to: 1.2 1.2 1.2; startEvents: mouseenter; dur: 200"
+                animation__leave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200">
                 
-                <!-- Іконка трикутника на кнопці -->
-                <a-triangle id="play-icon"
-                    position="0 0 0.006"
-                    rotation="90 0 0"
-                    scale="0.03 0.03 0.03"
-                    material="color: #ffffff; emissive: #00c8ff; emissiveIntensity: 0.5">
-                </a-triangle>
+                <!-- Текст на кнопці -->
+                <a-text value="GO!"
+                    position="0 0 0.002"
+                    align="center"
+                    color="#ffffff"
+                    width="0.008"
+                    font="https://cdn.aframe.io/fonts/Monoid.fnt">
+                </a-text>
 
-                <!-- Світлова оболонка (видима при наведенні) -->
-                <a-ring id="button-glow"
-                    radius-outer="0.035"
-                    radius-inner="0.03"
-                    position="0 0 0.005"
+                <!-- Світлова аура -->
+                <a-ring id="button-aura"
+                    radius-outer="0.008"
+                    radius-inner="0.006"
+                    position="0 0 0.001"
                     rotation="90 0 0"
-                    material="color: #00c8ff; opacity: 0; transparent: true"
-                    animation__glow="property: material.opacity; to: 0.7; startEvents: mouseenter; dur: 200"
-                    animation__unglow="property: material.opacity; to: 0; startEvents: mouseleave; dur: 200">
+                    material="color: #ff3366; opacity: 0.3; transparent: true"
+                    animation__rotate="property: rotation; to: 90 0 360; dur: 2000; loop: true; easing: linear">
                 </a-ring>
-            </a-cylinder>
+            </a-box>
 
-            <!-- Додаткові неонові елементи дизайну -->
-            <a-ring id="accent-ring-1"
-                radius-outer="0.095"
-                radius-inner="0.092"
-                position="0 0 0.01"
-                rotation="90 0 0"
-                material="color: #00aaff; emissive: #0088ff; emissiveIntensity: 0.3; side: double">
-            </a-ring>
-
-            <a-ring id="accent-ring-2"
-                radius-outer="0.105"
-                radius-inner="0.102"
-                position="0 0 0.009"
-                rotation="90 0 0"
-                material="color: #ff00aa; emissive: #cc0088; emissiveIntensity: 0.2; side: double">
-            </a-ring>
-
-            <!-- Точкові світлодіоди -->
-            <a-sphere class="led-dot"
-                radius="0.004"
-                position="-0.04 0.04 0.012"
-                material="color: #00ff88; emissive: #00ff88; emissiveIntensity: 0.8">
+            <!-- Кутові індикатори -->
+            <a-sphere class="corner-led"
+                radius="0.001"
+                position="-0.014 0.014 0.002"
+                material="color: #00ffc8; emissive: #00ffc8; emissiveIntensity: 0.8">
+                <a-animation attribute="material.emissiveIntensity"
+                    from="0.3" to="1" dur="500" repeat="indefinite" direction="alternate"></a-animation>
             </a-sphere>
             
-            <a-sphere class="led-dot"
-                radius="0.004"
-                position="0.04 -0.04 0.012"
-                material="color: #ff0088; emissive: #ff0088; emissiveIntensity: 0.8">
+            <a-sphere class="corner-led"
+                radius="0.001"
+                position="0.014 -0.014 0.002"
+                material="color: #ff00ff; emissive: #ff00ff; emissiveIntensity: 0.8">
+                <a-animation attribute="material.emissiveIntensity"
+                    from="0.3" to="1" dur="500" repeat="indefinite" direction="alternate" begin="250"></a-animation>
             </a-sphere>
+            
+            <a-sphere class="corner-led"
+                radius="0.001"
+                position="0.014 0.014 0.002"
+                material="color: #00ffff; emissive: #00ffff; emissiveIntensity: 0.8">
+                <a-animation attribute="material.emissiveIntensity"
+                    from="0.3" to="1" dur="500" repeat="indefinite" direction="alternate" begin="500"></a-animation>
+            </a-sphere>
+            
+            <a-sphere class="corner-led"
+                radius="0.001"
+                position="-0.014 -0.014 0.002"
+                material="color: #ffff00; emissive: #ffff00; emissiveIntensity: 0.8">
+                <a-animation attribute="material.emissiveIntensity"
+                    from="0.3" to="1" dur="500" repeat="indefinite" direction="alternate" begin="750"></a-animation>
+            </a-sphere>
+
+            <!-- Лінії сканування -->
+            <a-plane id="scan-line"
+                width="0.028"
+                height="0.001"
+                position="0 0.014 0.004"
+                material="color: #00ffc8; emissive: #00ffc8; emissiveIntensity: 1; opacity: 0.7"
+                visible="false">
+                <a-animation attribute="position"
+                    from="0 0.014 0.004" to="0 -0.014 0.004" dur="2000" repeat="indefinite"></a-animation>
+            </a-plane>
 
         </a-entity>
 
-        <!-- Статичне світло для підсвічування -->
-        <a-light type="point" color="#00aaff" intensity="0.5" position="0.5 0.5 0.5"></a-light>
-        <a-light type="ambient" color="#ffffff" intensity="0.3"></a-light>
+        <!-- Світло -->
+        <a-light type="point" color="#00aaff" intensity="0.8" position="0.2 0.2 0.2"></a-light>
+        <a-light type="point" color="#ff00ff" intensity="0.5" position="-0.2 0.2 0.1"></a-light>
+        <a-light type="ambient" color="#ffffff" intensity="0.4"></a-light>
 
     </a-scene>
 
-    <!-- Інструкція для користувача -->
+    <!-- Інструкція -->
     <div class="instruction" id="instruction">
         <div class="instruction-text">
-            <strong>Інструкція:</strong><br>
-            1. Наведіть камеру на браслет<br>
-            2. Натисніть на <span style="color:#00c8ff">▶ кнопку</span> на годиннику<br>
-            3. Дочекайтеся магічного результату!
+            <strong>⚡ КВЕСТ АКТИВОВАНО!</strong><br>
+            1. Наведіть на маркер на руці<br>
+            2. Натисніть <span style="color:#ff3366">GO!</span> на годиннику<br>
+            3. Отримайте супер-здібність!
         </div>
     </div>
 
@@ -270,22 +354,44 @@
         const loadingScreen = document.getElementById('loadingScreen');
         const resultScreen = document.getElementById('resultScreen');
         const resultTitle = document.getElementById('resultTitle');
+        const resultDescription = document.getElementById('resultDescription');
         const instruction = document.getElementById('instruction');
+        const agentBadge = document.getElementById('agentBadge');
         const watchEntity = document.getElementById('magic-watch');
-        const playButton = document.getElementById('play-button');
-        const dialText = document.getElementById('dial-text'); // Додано
+        const startButton = document.getElementById('start-button');
+        const dialText = document.getElementById('dial-text');
+        const scanLine = document.getElementById('scan-line');
 
-        // Масив завдань (без зображень)
-        const tasks = [
-            '🎲 Прочитай 15 речень і вибери найважливіше',
-            '🕵️ Знайди в тексті таємний зв\'язок',
-            '🎨 Намалюй схему головної ідеї',
-            '🏃 Виконай завдання за 5 хвилин',
-            '🤔 Задай класу одне глибоке питання',
-            '✍️ Випиши найкрасивіше речення',
-            '🧩 Склади питання з відповіддю в тексті',
-            '🎭 Прочитай уривок з виразом',
-            '🔍 Знайди 3 нових слова'
+        // Супер-здібності годинника
+        const abilities = [
+            {
+                title: "⏱️ ЗАМОРОЖУВАННЯ ЧАСУ",
+                description: "+2 хвилини додаткового часу для відповіді! Час зупинився навколо тебе."
+            },
+            {
+                title: "🔮 ПІДКАЗКА З МАЙБУТНЬОГО",
+                description: "Отримуєш натяк на правильну відповідь від себе з майбутнього!"
+            },
+            {
+                title: "🧭 ВІДПОВІДАЄ СУСІД З ЗАХОДУ",
+                description: "Твій однокласник зліва від тебе знає відповідь і допоможе!"
+            },
+            {
+                title: "🧭 ВІДПОВІДАЄ СУСІД З ПІВДНЯ",
+                description: "Твій однокласник спереду знає відповідь і підкаже!"
+            },
+            {
+                title: "🚀 ПРОПУСТИТИ ПИТАННЯ",
+                description: "Автоматичний перехід до наступного завдання без втрати балів!"
+            },
+            {
+                title: "🤫 НІХТО НЕ ВІДПОВІДАЄ",
+                description: "Питання скасовується для всіх. Ніхто не отримує балів!"
+            },
+            {
+                title: "🏠 ВДОМА ЗНАЙДУТЬ ВІДПОВІДЬ",
+                description: "Можна відповісти на питання вдома та отримати бали завтра!"
+            }
         ];
 
         // Приховати інструкцію спочатку
@@ -297,99 +403,130 @@
                 loadingScreen.style.opacity = '0';
                 setTimeout(() => {
                     loadingScreen.style.display = 'none';
-                    instruction.style.display = 'block';
                 }, 500);
             }, 1500);
         });
 
         // Подія при знаходженні маркера
         document.querySelector('a-scene').addEventListener('targetFound', event => {
-            console.log('🎯 Маркер знайдено!');
+            console.log('🎯 Маркер активовано! Годинник ONLINE');
             watchEntity.setAttribute('visible', 'true');
+            instruction.style.display = 'block';
+            agentBadge.style.display = 'block';
             
             // Анімація появи
             watchEntity.setAttribute('animation', {
                 property: 'scale',
-                from: '0.5 0.5 0.5',
+                from: '0.1 0.1 0.1',
                 to: '1 1 1',
-                dur: 800,
+                dur: 1000,
                 easing: 'easeOutElastic'
+            });
+            
+            // Запускаємо анімацію кутових LED
+            document.querySelectorAll('.corner-led').forEach(led => {
+                led.setAttribute('visible', 'true');
             });
         });
 
         // Подія при втраті маркера
         document.querySelector('a-scene').addEventListener('targetLost', event => {
-            console.log('❌ Маркер втрачено');
+            console.log('⚠️ Маркер втрачено. Годинник OFFLINE');
             watchEntity.setAttribute('visible', 'false');
-            dialText.setAttribute('visible', 'false'); // Сховати текст
+            instruction.style.display = 'none';
+            agentBadge.style.display = 'none';
+            dialText.setAttribute('value', 'OFFLINE');
+            scanLine.setAttribute('visible', 'false');
         });
 
-        // Обробник кліку на кнопку PLAY
-        playButton.addEventListener('click', function(event) {
-            // Запобігаємо подвійному кліку
-            if (playButton.getAttribute('data-processing') === 'true') return;
-            playButton.setAttribute('data-processing', 'true');
+        // Обробник кліку на кнопку START
+        startButton.addEventListener('click', function(event) {
+            if (startButton.getAttribute('data-processing') === 'true') return;
+            startButton.setAttribute('data-processing', 'true');
             
-            // Вібрація телефона (якщо підтримується)
+            // Вібрація
             if (navigator.vibrate) {
-                navigator.vibrate([100, 50, 100]);
+                navigator.vibrate([50, 30, 50, 30, 50]);
             }
             
-            // Інтенсивне підсвічування кнопки
-            playButton.setAttribute('material', 'color', '#00ffff; emissive: #00ffff; emissiveIntensity: 1');
-            document.getElementById('button-glow').setAttribute('material', 'opacity', '1');
-            
-            // Анімація натискання
-            playButton.setAttribute('animation__press', {
-                property: 'scale',
-                to: '0.85 0.85 0.85',
-                dur: 200,
-                easing: 'easeInOutQuad'
-            });
-            
-            // Анімація "пульсації" годинника
-            watchEntity.setAttribute('animation__pulse', {
-                property: 'scale',
-                from: '1 1 1',
-                to: '1.05 1.05 1.05',
-                dur: 300,
-                easing: 'easeInOutSine',
-                dir: 'alternate',
-                loop: 3
-            });
-            
-            // Чекаємо 3 секунди
-            setTimeout(() => {
-                // Випадковий вибір завдання
-                const randomIndex = Math.floor(Math.random() * tasks.length);
-                const selectedTask = tasks[randomIndex];
-                
-                // Показуємо результат на циферблаті
-                showResultOnDial(selectedTask);
-                
-                // Скидаємо стан кнопки
-                setTimeout(() => {
-                    playButton.setAttribute('material', 'color', '#003344');
-                    playButton.setAttribute('data-processing', 'false');
-                    document.getElementById('button-glow').setAttribute('material', 'opacity', '0');
-                }, 1000);
-                
-            }, 3000);
-        });
-
-        // Функція показу результату на циферблаті
-        function showResultOnDial(title) {
-            // Оновлюємо текст на циферблаті
-            dialText.setAttribute('value', title);
-            dialText.setAttribute('visible', 'true');
+            // Зміна стану кнопки
+            startButton.setAttribute('material', 'color', '#ffff00');
+            startButton.setAttribute('animation__pulse', 'dur', '200');
             
             // Приховуємо інструкцію
-            instruction.style.display = 'none';
+            instruction.style.opacity = '0';
             
-            // Показуємо результат на екрані (для зручності)
-            resultTitle.textContent = title;
+            // Запускаємо процес активації
+            activateSuperAbility();
+        });
+
+        // Функція активації супер-здібності
+        function activateSuperAbility() {
+            // Показуємо лінію сканування
+            scanLine.setAttribute('visible', 'true');
+            dialText.setAttribute('value', 'SCANNING...');
+            
+            // Анімація очікування
+            let countdown = 3;
+            const countdownInterval = setInterval(() => {
+                dialText.setAttribute('value', `${countdown}...`);
+                if (navigator.vibrate) navigator.vibrate(100);
+                countdown--;
+                
+                if (countdown < 0) {
+                    clearInterval(countdownInterval);
+                    finishActivation();
+                }
+            }, 1000);
+        }
+
+        // Функція завершення активації
+        function finishActivation() {
+            // Випадковий вибір здібності
+            const randomIndex = Math.floor(Math.random() * abilities.length);
+            const selectedAbility = abilities[randomIndex];
+            
+            // Приховуємо лінію сканування
+            scanLine.setAttribute('visible', 'false');
+            
+            // Анімація отримання здібності
+            dialText.setAttribute('value', 'ABILITY FOUND!');
+            
+            // Світлова вспишка
+            watchEntity.setAttribute('animation__flash', {
+                property: 'material.emissive',
+                from: '#001122',
+                to: '#ffffff',
+                dur: 200,
+                easing: 'easeOutQuad',
+                dir: 'alternate',
+                loop: 2
+            });
+            
+            setTimeout(() => {
+                dialText.setAttribute('value', selectedAbility.title.split(' ')[0]);
+                
+                // Показуємо результат
+                showResult(selectedAbility);
+                
+                // Відновлюємо кнопку
+                setTimeout(() => {
+                    startButton.setAttribute('material', 'color', '#ff3366');
+                    startButton.setAttribute('animation__pulse', 'dur', '800');
+                    startButton.setAttribute('data-processing', 'false');
+                }, 1000);
+                
+            }, 1000);
+        }
+
+        // Функція показу результату
+        function showResult(ability) {
+            resultTitle.textContent = ability.title;
+            resultDescription.textContent = ability.description;
+            
             resultScreen.style.display = 'flex';
             resultScreen.style.opacity = '0';
+            
             setTimeout(() => {
                 resultScreen.style.opacity = '1';
                 resultScreen.style.transition = 'opacity 0.5s';
@@ -401,8 +538,8 @@
             resultScreen.style.opacity = '0';
             setTimeout(() => {
                 resultScreen.style.display = 'none';
-                instruction.style.display = 'block';
-                dialText.setAttribute('visible', 'false');
+                instruction.style.opacity = '1';
+                dialText.setAttribute('value', 'READY');
             }, 500);
         }
 
@@ -410,21 +547,23 @@
         window.addEventListener('error', function(e) {
             console.error('Помилка:', e.error);
             loadingScreen.innerHTML = `
-                <h2 style="color:#ff5555">😕 Упс, щось пішло не так</h2>
-                <p style="color:#aaa; margin:20px; text-align:center">
-                    Перезавантажте сторінку<br>
-                    або перевірте підключення до інтернету
+                <h2 style="color:#ff5555; text-shadow: 0 0 10px #ff5555">🚨 СИСТЕМНИЙ ЗБІЙ</h2>
+                <p style="color:#aaddff; margin:20px; text-align:center">
+                    Місія тимчасово недоступна<br>
+                    Перезавантаження системи...
                 </p>
                 <button onclick="location.reload()" style="
-                    padding: 10px 30px;
-                    background: #00c8ff;
+                    padding: 12px 30px;
+                    background: linear-gradient(135deg, #ff3366 0%, #ff00ff 100%);
                     border: none;
-                    border-radius: 20px;
+                    border-radius: 25px;
                     color: white;
                     font-size: 16px;
+                    font-weight: bold;
                     cursor: pointer;
                     margin-top: 20px;
-                ">Перезавантажити</button>
+                    box-shadow: 0 0 20px rgba(255, 51, 102, 0.5);
+                ">ПЕРЕЗАПУСТИТИ СИСТЕМУ</button>
             `;
         });
     </script>
