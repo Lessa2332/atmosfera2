@@ -3,210 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Гео-Снайпер: Африка</title>
+    <title>Космічний Сортувальник</title>
     <style>
-        :root {
-            --neon-green: #39ff14;
-            --neon-red: #ff3131;
-            --cyber-blue: #050a30;
-        }
-
         body {
             margin: 0;
-            padding: 0;
-            background-color: var(--cyber-blue);
+            background: #000510;
             color: white;
-            font-family: 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Courier New', Courier, monospace;
             overflow: hidden;
-            touch-action: manipulation;
+            touch-action: none;
         }
-
-        #game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        /* Контур материка на фоні */
-        #continent-map {
+        canvas { display: block; }
+        #ui {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            max-width: 400px;
-            opacity: 0.2;
-            z-index: 0;
-            pointer-events: none;
-            filter: drop-shadow(0 0 10px #00d4ff);
-        }
-
-        #ui-layer {
-            position: relative;
-            z-index: 10;
+            top: 20px;
             width: 100%;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            box-sizing: border-box;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(5px);
-        }
-
-        .stat {
-            font-size: 20px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        #score { color: var(--neon-green); }
-
-        /* Стиль міражів (Емодзі) */
-        .mirage {
-            position: absolute;
-            font-size: 50px;
-            cursor: pointer;
-            user-select: none;
-            z-index: 5;
-            transition: transform 0.1s;
-            animation: blink-mirage 1.5s infinite ease-in-out;
-            filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
-        }
-
-        @keyframes blink-mirage {
-            0% { opacity: 0; transform: scale(0.5) rotate(-10deg); }
-            50% { opacity: 0.4; transform: scale(1.1) rotate(0deg); }
-            100% { opacity: 0; transform: scale(0.5) rotate(10deg); }
-        }
-
-        /* Ефекти */
-        .hit-effect {
-            position: absolute;
+            text-align: center;
             pointer-events: none;
-            animation: fade-up 0.5s forwards;
-            font-weight: bold;
-            z-index: 100;
+            text-shadow: 0 0 10px #00f2ff;
         }
-
-        @keyframes fade-up {
-            from { opacity: 1; transform: translateY(0); }
-            to { opacity: 0; transform: translateY(-50px); }
-        }
-
         #win-screen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(5, 10, 48, 0.95);
+            background: rgba(0,0,0,0.9);
             display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
-            text-align: center;
+            z-index: 100;
         }
-
         .btn {
-            background: var(--neon-green);
-            color: black;
+            background: #00f2ff;
             border: none;
             padding: 15px 30px;
-            font-size: 18px;
+            border-radius: 20px;
             font-weight: bold;
-            border-radius: 50px;
             margin-top: 20px;
-            box-shadow: 0 0 20px var(--neon-green);
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <div id="ui-layer">
-        <div class="stat">Очки: <span id="score-val">0</span></div>
-        <div class="stat">Ціль: 1000</div>
-    </div>
-
-    <div id="continent-map">🌍<br>AFRICA</div>
-
-    <div id="win-screen">
-        <h1 style="color: var(--neon-green)">МІРАЖ СТАБІЛІЗОВАНО!</h1>
-        <p>Ваш код: <span style="font-size: 30px; letter-spacing: 5px;">АНС</span></p>
-        <button class="btn" onclick="window.location.reload()">ГРАТИ ЗНОВУ</button>
-    </div>
+<div id="ui">
+    <h2>ОЧИЩЕННЯ ОРБІТИ: <span id="percent">0</span>%</h2>
+    <p>Відкидай 🗑️ та 🛰️ подалі! Збирай 💎 до Землі!</p>
 </div>
 
+<div id="win-screen">
+    <h1 style="color: #00f2ff;">МІСІЯ ВИКОНАНА!</h1>
+    <p>Земля знову дихає. Ваш код: <b>БАЛ</b></p>
+    <button class="btn" onclick="location.reload()">ПОВТОРИТИ</button>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
 <script>
-    const container = document.getElementById('game-container');
-    const scoreElement = document.getElementById('score-val');
-    const winScreen = document.getElementById('win-screen');
-    
-    let score = 0;
-    const targetScore = 1000;
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const winScreen = document.getElementById('win-screen');
+const percentText = document.getElementById('percent');
 
-    // Списки об'єктів
-    const correctItems = ['🦁', '🦒', '🐘', '🏜️', '☕', '🦓', '🐆', '🌴'];
-    const wrongItems = ['🐧', '🧊', '❄️', '🐻', '🎿', '🍓'];
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-    function createMirage() {
-        if (score >= targetScore) return;
+let score = 0;
+const targetScore = 15; // Треба очистити 15 одиниць сміття
+let earthSaturation = 0; // Стан Землі (від 0 до 100)
+let objects = [];
+let isDragging = false;
+let draggedObj = null;
 
-        const isCorrect = Math.random() > 0.4;
-        const emoji = isCorrect 
-            ? correctItems[Math.floor(Math.random() * correctItems.length)]
-            : wrongItems[Math.floor(Math.random() * wrongItems.length)];
+const earth = {
+    x: canvas.width / 2,
+    y: canvas.height / 2,
+    radius: 60
+};
 
-        const mirage = document.createElement('div');
-        mirage.className = 'mirage';
-        mirage.textContent = emoji;
+class SpaceObject {
+    constructor(type) {
+        this.type = type; // 'junk' або 'gem'
+        this.emoji = type === 'junk' ? ['🗑️', '🛰️', '🌠'][Math.floor(Math.random()*3)] : '💎';
         
-        // Випадкова позиція (відступ від країв 15%)
-        mirage.style.left = Math.random() * 70 + 15 + '%';
-        mirage.style.top = Math.random() * 70 + 15 + '%';
+        // Початкова позиція на колі навколо Землі
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 150 + Math.random() * 100;
+        this.x = earth.x + Math.cos(angle) * dist;
+        this.y = earth.y + Math.sin(angle) * dist;
+        
+        this.speed = 0.01 + Math.random() * 0.02;
+        this.angle = angle;
+        this.dist = dist;
+        this.vx = 0;
+        this.vy = 0;
+        this.isKicked = false;
+    }
 
-        mirage.onclick = (e) => {
-            if (isCorrect) {
-                updateScore(100, e.clientX, e.clientY, "✅ +100", '#39ff14');
-            } else {
-                updateScore(-150, e.clientX, e.clientY, "❌ -150", '#ff3131');
+    update() {
+        if (!this.isKicked) {
+            // Рух по орбіті
+            this.angle += this.speed;
+            this.x = earth.x + Math.cos(this.angle) * this.dist;
+            this.y = earth.y + Math.sin(this.angle) * this.dist;
+        } else {
+            // Фізика польоту після свайпу
+            this.x += this.vx;
+            this.y += this.vy;
+            
+            // Перевірка дистанції для сміття (виліт за екран)
+            const d = Math.hypot(this.x - earth.x, this.y - earth.y);
+            if (this.type === 'junk' && d > 1000) return false;
+            
+            // Притягнення алмазів до Землі
+            if (this.type === 'gem' && d < 50) {
+                earthSaturation += 10;
+                return false;
             }
-            mirage.remove();
-        };
-
-        container.appendChild(mirage);
-
-        // Видалення міражу через 1.5 секунди
-        setTimeout(() => {
-            if (mirage.parentNode) mirage.remove();
-        }, 1500);
-    }
-
-    function updateScore(amount, x, y, text, color) {
-        score += amount;
-        if (score < 0) score = 0;
-        scoreElement.textContent = score;
-
-        // Ефект тексту при кліку
-        const effect = document.createElement('div');
-        effect.className = 'hit-effect';
-        effect.textContent = text;
-        effect.style.left = x + 'px';
-        effect.style.top = y + 'px';
-        effect.style.color = color;
-        container.appendChild(effect);
-        setTimeout(() => effect.remove(), 500);
-
-        if (score >= targetScore) {
-            winScreen.style.display = 'flex';
         }
+        return true;
     }
 
-    // Цикл появи міражів
-    setInterval(createMirage, 800);
-</script>
+    draw() {
+        ctx.font = "30px Arial";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(this.emoji, this.x, this.y);
+    }
+}
 
+function spawn() {
+    if (objects.length < 10) {
+        objects.push(new SpaceObject(Math.random() > 0.3 ? 'junk' : 'gem'));
+    }
+}
+
+function drawEarth() {
+    ctx.save();
+    // Ефект сірої/яскравої землі через фільтр
+    ctx.filter = `saturate(${earthSaturation}%) brightness(${50 + earthSaturation/2}%)`;
+    ctx.font = "80px Arial";
+    ctx.fillText("🌍", earth.x, earth.y);
+    ctx.restore();
+    
+    // Сяйво навколо Землі
+    ctx.beginPath();
+    ctx.arc(earth.x, earth.y, earth.radius + 10, 0, Math.PI*2);
+    ctx.strokeStyle = `rgba(0, 242, 255, ${earthSaturation/100})`;
+    ctx.stroke();
+}
+
+function update() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    drawEarth();
+    
+    objects = objects.filter(obj => {
+        const active = obj.update();
+        if (!active && obj.type === 'junk') {
+            score++;
+            percentText.textContent = Math.floor((score/targetScore)*100);
+            if (score >= targetScore) winScreen.style.display = 'flex';
+        }
+        return active;
+    });
+
+    objects.forEach(obj => obj.draw());
+    spawn();
+    requestAnimationFrame(update);
+}
+
+// Обробка дотиків/свайпів
+canvas.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0];
+    objects.forEach(obj => {
+        if (Math.hypot(touch.clientX - obj.x, touch.clientY - obj.y) < 40) {
+            draggedObj = obj;
+        }
+    });
+});
+
+canvas.addEventListener('touchmove', (e) => {
+    if (draggedObj) {
+        const touch = e.touches[0];
+        const dx = touch.clientX - earth.x;
+        const dy = touch.clientY - earth.y;
+        
+        draggedObj.isKicked = true;
+        draggedObj.vx = (touch.clientX - draggedObj.x) * 0.5;
+        draggedObj.vy = (touch.clientY - draggedObj.y) * 0.5;
+        draggedObj.x = touch.clientX;
+        draggedObj.y = touch.clientY;
+    }
+});
+
+canvas.addEventListener('touchend', () => { draggedObj = null; });
+
+update();
+</script>
 </body>
 </html>
