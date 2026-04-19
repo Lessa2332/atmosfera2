@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Космічний Сортувальник</title>
+    <title>Еко-Варта: Чиста Орбіта</title>
     <style>
         body {
             margin: 0;
-            background: #000510;
+            background: #01060f;
             color: white;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow: hidden;
             touch-action: none;
         }
@@ -20,40 +20,58 @@
             width: 100%;
             text-align: center;
             pointer-events: none;
-            text-shadow: 0 0 10px #00f2ff;
+        }
+        .status-bar {
+            font-size: 22px;
+            font-weight: bold;
+            color: #00f2ff;
+            text-shadow: 0 0 15px rgba(0,242,255,0.7);
+            margin-bottom: 5px;
+        }
+        .hint {
+            font-size: 14px;
+            opacity: 0.8;
+            background: rgba(0,0,0,0.4);
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
         }
         #win-screen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.95);
             display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 100;
+            text-align: center;
         }
         .btn {
-            background: #00f2ff;
+            background: #39ff14;
+            color: black;
             border: none;
-            padding: 15px 30px;
-            border-radius: 20px;
+            padding: 15px 40px;
+            font-size: 20px;
             font-weight: bold;
-            margin-top: 20px;
+            border-radius: 50px;
+            margin-top: 30px;
             cursor: pointer;
+            box-shadow: 0 0 20px rgba(57, 255, 20, 0.4);
         }
     </style>
 </head>
 <body>
 
 <div id="ui">
-    <h2>ОЧИЩЕННЯ ОРБІТИ: <span id="percent">0</span>%</h2>
-    <p>Відкидай 🗑️ та 🛰️ подалі! Збирай 💎 до Землі!</p>
+    <div class="status-bar">ВІДНОВЛЕННЯ: <span id="percent">0</span>%</div>
+    <div class="hint">🚀 Викидай: 🥤🔋✂️ | ✨ Збирай: 🌱💧♻️💎</div>
 </div>
 
 <div id="win-screen">
-    <h1 style="color: #00f2ff;">МІСІЯ ВИКОНАНА!</h1>
-    <p>Земля знову дихає. Ваш код: <b>БАЛ</b></p>
-    <button class="btn" onclick="location.reload()">ПОВТОРИТИ</button>
+    <h1 style="color: #39ff14; font-size: 40px;">ПЛАНЕТУ ВРЯТОВАНО!</h1>
+    <p style="font-size: 20px;">Ваш енергетичний код: <b style="font-size: 35px; color: #00f2ff; letter-spacing: 10px;">БАЛ</b></p>
+    <button class="btn" onclick="location.reload()">ПОЧАТИ ЗНОВУ</button>
 </div>
 
 <canvas id="gameCanvas"></canvas>
@@ -61,17 +79,13 @@
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const winScreen = document.getElementById('win-screen');
 const percentText = document.getElementById('percent');
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-let score = 0;
-const targetScore = 15; // Треба очистити 15 одиниць сміття
-let earthSaturation = 0; // Стан Землі (від 0 до 100)
+let earthSaturation = 0;
 let objects = [];
-let isDragging = false;
 let draggedObj = null;
 
 const earth = {
@@ -80,43 +94,56 @@ const earth = {
     radius: 60
 };
 
+// Списки ваших емодзі
+const junkList = ['🥤', '🔋', '✂️', '🗑️', '🍾', '🥫'];
+const ecoList = ['🌱', '💧', '♻️', '💎', '✨'];
+
 class SpaceObject {
     constructor(type) {
-        this.type = type; // 'junk' або 'gem'
-        this.emoji = type === 'junk' ? ['🗑️', '🛰️', '🌠'][Math.floor(Math.random()*3)] : '💎';
+        this.type = type; 
+        this.emoji = type === 'junk' 
+            ? junkList[Math.floor(Math.random() * junkList.length)] 
+            : ecoList[Math.floor(Math.random() * ecoList.length)];
         
-        // Початкова позиція на колі навколо Землі
         const angle = Math.random() * Math.PI * 2;
-        const dist = 150 + Math.random() * 100;
+        const dist = 160 + Math.random() * 90;
         this.x = earth.x + Math.cos(angle) * dist;
         this.y = earth.y + Math.sin(angle) * dist;
         
-        this.speed = 0.01 + Math.random() * 0.02;
+        // Повільний рух для комфорту очей
+        this.speed = 0.002 + Math.random() * 0.004;
         this.angle = angle;
         this.dist = dist;
         this.vx = 0;
         this.vy = 0;
-        this.isKicked = false;
+        this.isReleased = false;
+        this.opacity = 0;
     }
 
     update() {
-        if (!this.isKicked) {
-            // Рух по орбіті
+        if (this.opacity < 1) this.opacity += 0.03;
+
+        if (!this.isReleased) {
             this.angle += this.speed;
             this.x = earth.x + Math.cos(this.angle) * this.dist;
             this.y = earth.y + Math.sin(this.angle) * this.dist;
         } else {
-            // Фізика польоту після свайпу
             this.x += this.vx;
             this.y += this.vy;
-            
-            // Перевірка дистанції для сміття (виліт за екран)
+            this.vx *= 0.97; 
+            this.vy *= 0.97;
+
             const d = Math.hypot(this.x - earth.x, this.y - earth.y);
-            if (this.type === 'junk' && d > 1000) return false;
             
-            // Притягнення алмазів до Землі
-            if (this.type === 'gem' && d < 50) {
-                earthSaturation += 10;
+            // Сміття летить геть
+            if (this.type === 'junk' && d > 650) {
+                earthSaturation += 5; 
+                return false;
+            }
+            
+            // Еко-бонуси до Землі
+            if (this.type === 'gem' && d < 55) {
+                earthSaturation += 12; // Більше балів за еко-об'єкти
                 return false;
             }
         }
@@ -124,75 +151,88 @@ class SpaceObject {
     }
 
     draw() {
-        ctx.font = "30px Arial";
+        ctx.globalAlpha = this.opacity;
+        ctx.font = "42px Arial";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(this.emoji, this.x, this.y);
+        ctx.globalAlpha = 1;
     }
 }
 
 function spawn() {
-    if (objects.length < 10) {
-        objects.push(new SpaceObject(Math.random() > 0.3 ? 'junk' : 'gem'));
+    if (objects.length < 6) { 
+        objects.push(new SpaceObject(Math.random() > 0.35 ? 'junk' : 'gem'));
     }
 }
 
 function drawEarth() {
     ctx.save();
-    // Ефект сірої/яскравої землі через фільтр
+    // Налаштування кольору Землі в залежності від успіху
     ctx.filter = `saturate(${earthSaturation}%) brightness(${50 + earthSaturation/2}%)`;
-    ctx.font = "80px Arial";
+    ctx.font = "110px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
     ctx.fillText("🌍", earth.x, earth.y);
-    ctx.restore();
     
-    // Сяйво навколо Землі
-    ctx.beginPath();
-    ctx.arc(earth.x, earth.y, earth.radius + 10, 0, Math.PI*2);
-    ctx.strokeStyle = `rgba(0, 242, 255, ${earthSaturation/100})`;
-    ctx.stroke();
+    // Сяйво атмосфери
+    if (earthSaturation > 10) {
+        ctx.beginPath();
+        ctx.arc(earth.x, earth.y, 65, 0, Math.PI*2);
+        ctx.strokeStyle = `rgba(0, 242, 255, ${earthSaturation/150})`;
+        ctx.lineWidth = 5;
+        ctx.stroke();
+    }
+    ctx.restore();
 }
 
 function update() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
+    // Малюємо зірки на фоні (статичні)
+    ctx.fillStyle = "rgba(255,255,255,0.1)";
+    for(let i=0; i<50; i++) {
+        ctx.beginPath();
+        ctx.arc((i*137)%canvas.width, (i*553)%canvas.height, 1, 0, 2*Math.PI);
+        ctx.fill();
+    }
+
     drawEarth();
     
-    objects = objects.filter(obj => {
-        const active = obj.update();
-        if (!active && obj.type === 'junk') {
-            score++;
-            percentText.textContent = Math.floor((score/targetScore)*100);
-            if (score >= targetScore) winScreen.style.display = 'flex';
-        }
-        return active;
-    });
-
+    objects = objects.filter(obj => obj.update());
     objects.forEach(obj => obj.draw());
+    
+    const currentPercent = Math.min(100, Math.floor(earthSaturation));
+    percentText.textContent = currentPercent;
+    
+    if (currentPercent >= 100) {
+        document.getElementById('win-screen').style.display = 'flex';
+    }
+
     spawn();
     requestAnimationFrame(update);
 }
 
-// Обробка дотиків/свайпів
+// Управління тачами
 canvas.addEventListener('touchstart', (e) => {
-    const touch = e.touches[0];
+    const t = e.touches[0];
     objects.forEach(obj => {
-        if (Math.hypot(touch.clientX - obj.x, touch.clientY - obj.y) < 40) {
+        if (Math.hypot(t.clientX - obj.x, t.clientY - obj.y) < 60) {
             draggedObj = obj;
+            obj.isReleased = false;
         }
     });
 });
 
 canvas.addEventListener('touchmove', (e) => {
     if (draggedObj) {
-        const touch = e.touches[0];
-        const dx = touch.clientX - earth.x;
-        const dy = touch.clientY - earth.y;
-        
-        draggedObj.isKicked = true;
-        draggedObj.vx = (touch.clientX - draggedObj.x) * 0.5;
-        draggedObj.vy = (touch.clientY - draggedObj.y) * 0.5;
-        draggedObj.x = touch.clientX;
-        draggedObj.y = touch.clientY;
+        const t = e.touches[0];
+        // Розрахунок вектору кидка
+        draggedObj.vx = (t.clientX - draggedObj.x) * 0.7;
+        draggedObj.vy = (t.clientY - draggedObj.y) * 0.7;
+        draggedObj.x = t.clientX;
+        draggedObj.y = t.clientY;
+        draggedObj.isReleased = true; 
     }
 });
 
